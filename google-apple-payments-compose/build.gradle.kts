@@ -37,3 +37,20 @@ dependencies {
     androidMainImplementation(libs.appCompat)
     androidMainImplementation(libs.composeActivity)
 }
+
+
+group = "com.metacto.payments"
+version = "0.1.0"
+
+publishing {
+    repositories {
+        maven {
+            url = uri("https://maven.pkg.github.com/Meta-CTO/google-apple-pay")
+            name = "GitHubPackages"
+            credentials {
+                username = "metactoengineer"
+                password = "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"
+            }
+        }
+    }
+}
