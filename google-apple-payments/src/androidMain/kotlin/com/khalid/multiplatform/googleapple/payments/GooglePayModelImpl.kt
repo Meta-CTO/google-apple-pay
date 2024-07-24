@@ -61,12 +61,15 @@ class GooglePayModelImpl(
     }
 
     @OptIn(DelicateCoroutinesApi::class)
-    override suspend fun makePayments(amount: String, callback: (result: Result<String>) -> Unit) {
+    override suspend fun makePayments(amount: String, callback: (result: Result<PaymentResult>) -> Unit) {
         val paymentDataRequestJson = googlePayUtils.getPaymentDataRequest(priceCents = amount.toLong())
         val request = PaymentDataRequest.fromJson(paymentDataRequestJson.toString())
         paymentsClient.loadPaymentData(request).addOnCompleteListener {
             if(it.isSuccessful) {
-                callback(Result.Success(it.result.toJson()))
+                callback(Result.Success(PaymentResult(
+                    receipt = it.result.toJson(),
+                    status = PaymentStatus.SUCCESS
+                )))
                 return@addOnCompleteListener
             }
             if(it.exception is ResolvableApiException){
@@ -81,7 +84,7 @@ class GooglePayModelImpl(
 
     private suspend fun resolveWithPayUI(
         resolvableApiException: ResolvableApiException,
-        callback: (result: Result<String>) -> Unit) {
+        callback: (result: Result<PaymentResult>) -> Unit) {
         val fragmentManager: FragmentManager = awaitFragmentManager()
         val resolverFragment: ResolverFragment = getOrCreateResolverFragment(fragmentManager)
         resolverFragment.resolvePayment(

@@ -37,35 +37,46 @@ internal class ResolverFragment : Fragment() {
         retainInstance = true
     }
 
-    private var callback: (Result<String>) -> Unit = {}
+    private var callback: (Result<PaymentResult>) -> Unit = {}
 
     @Suppress("MaxLineLength")
-    private val resolveGooglePayLauncher = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
-            result: ActivityResult ->
-        when (result.resultCode) {
-            RESULT_OK -> {
-                runCatching {
-                    result.data?.let { intent ->
-                        PaymentData.getFromIntent(intent)?.let {
-                            callback(Result.Success(it.toJson()))
+    private val resolveGooglePayLauncher =
+        registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result: ActivityResult ->
+            when (result.resultCode) {
+                RESULT_OK -> {
+                    runCatching {
+                        result.data?.let { intent ->
+                            PaymentData.getFromIntent(intent)?.let {
+                                callback(
+                                    Result.Success(
+                                        PaymentResult(
+                                            receipt = it.toJson(), status = PaymentStatus.SUCCESS
+                                        )
+                                    )
+                                )
+                            }
                         }
+                    }.onFailure {
+                        callback(Result.Failure(it))
                     }
-                }.onFailure {
-                    callback(Result.Failure(it))
+                }
+
+                RESULT_CANCELED -> {
+                    callback(Result.Failure(Exception("RESULT_CANCELED")))
                 }
             }
-            RESULT_CANCELED -> {
-                callback(Result.Failure(Exception("RESULT_CANCELED")))
-            }
         }
-    }
 
-    fun resolvePayment(resolvableApiException: ResolvableApiException, callback: (Result<String>) -> Unit) {
+    fun resolvePayment(
+        resolvableApiException: ResolvableApiException,
+        callback: (Result<PaymentResult>) -> Unit
+    ) {
         this.callback = callback
         lifecycleScope.launch {
             lifecycle.repeatOnLifecycle(Lifecycle.State.CREATED) {
                 resolveGooglePayLauncher.launch(
-                    IntentSenderRequest.Builder(resolvableApiException.resolution).build())
+                    IntentSenderRequest.Builder(resolvableApiException.resolution).build()
+                )
             }
         }
 

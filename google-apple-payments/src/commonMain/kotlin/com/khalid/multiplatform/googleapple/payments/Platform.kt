@@ -19,8 +19,12 @@ package com.khalid.multiplatform.googleapple.payments
 
 expect interface PaymentInterface {
     suspend fun canMakePayments(): Boolean
-    suspend fun makePayments(amount: String, callback: (result: Result<String>) -> Unit)
+    suspend fun makePayments(amount: String, callback: (result: Result<PaymentResult>) -> Unit)
 }
 
+enum class PaymentStatus {
+    SUCCESS, FAILURE
+}
 
+data class PaymentResult(val status: PaymentStatus, val receipt: String)
 

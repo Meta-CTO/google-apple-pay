@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
+@file:OptIn(ExperimentalForeignApi::class)
+
 package com.khalid.multiplatform.googleapple.payments
 
+import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSDecimalNumber
+import platform.Foundation.NSJSONReadingOptions
 import platform.Foundation.NSLog
 import platform.PassKit.PKMerchantCapability3DS
 import platform.PassKit.PKPayment
@@ -31,6 +35,7 @@ import platform.PassKit.PKPaymentRequest
 import platform.PassKit.PKPaymentSummaryItem
 import platform.UIKit.UIApplication
 import platform.darwin.NSObject
+import platform.Foundation.NSJSONSerialization
 
 @Suppress("ForbiddenComment")
 class ApplePayModelImpl(val config: PaymentConfig) : PaymentInterface {
@@ -39,7 +44,10 @@ class ApplePayModelImpl(val config: PaymentConfig) : PaymentInterface {
         return PKPaymentAuthorizationViewController.canMakePayments()
     }
 
-    override suspend fun makePayments(amount: String, callback: (result: Result<String>) -> Unit) {
+    override suspend fun makePayments(
+        amount: String,
+        callback: (result: Result<PaymentResult>) -> Unit
+    ) {
         val paymentRequest = PKPaymentRequest()
         paymentRequest.merchantIdentifier = config.gatewayMerchantId
         paymentRequest.countryCode = config.countryCode
@@ -59,7 +67,6 @@ class ApplePayModelImpl(val config: PaymentConfig) : PaymentInterface {
         paymentRequest.paymentSummaryItems = listOf(paymentItem)
 
 
-
         /**
          * TODO:
          * {"message":"This method does I/O on the main thread underneath that can lead to UI
@@ -67,17 +74,23 @@ class ApplePayModelImpl(val config: PaymentConfig) : PaymentInterface {
          * code path","antipattern trigger":"-[NSBundle bundleIdentifier]","message type":
          * "suppressable","show in console":"0"}
          * */
-        val paymentController = PKPaymentAuthorizationViewController(paymentRequest = paymentRequest)
+        val paymentController =
+            PKPaymentAuthorizationViewController(paymentRequest = paymentRequest)
         paymentController.delegate = PaymentAuthorizationDelegate(callback)
 
         val window = UIApplication.sharedApplication.keyWindow
-        window?.rootViewController?.presentViewController(paymentController, animated = true, completion = null)
+        window?.rootViewController?.presentViewController(
+            paymentController,
+            animated = true,
+            completion = null
+        )
 
     }
 
 }
 
-private class PaymentAuthorizationDelegate(private val callback: (result: Result<String>) -> Unit) : NSObject(),
+private class PaymentAuthorizationDelegate(private val callback: (result: Result<PaymentResult>) -> Unit) :
+    NSObject(),
     PKPaymentAuthorizationViewControllerDelegateProtocol {
     override fun paymentAuthorizationViewController(
         controller: PKPaymentAuthorizationViewController,
@@ -89,8 +102,20 @@ private class PaymentAuthorizationDelegate(private val callback: (result: Result
         completion(PKPaymentAuthorizationStatus.PKPaymentAuthorizationStatusSuccess)
         // Token will be empty on Simulator
         NSLog("Payment token ${didAuthorizePayment.token.paymentData}")
-        callback(Result.Success(PKPaymentAuthorizationStatus.PKPaymentAuthorizationStatusSuccess.name))
 
+        val token = didAuthorizePayment.token.paymentData
+
+        val jsonString =
+            NSJSONSerialization.JSONObjectWithData(token, NSJSONReadingOptions.MIN_VALUE, null)
+
+        callback(
+            Result.Success(
+                PaymentResult(
+                    status = PaymentStatus.SUCCESS,
+                    receipt = jsonString.toString()
+                )
+            )
+        )
     }
 
     override fun paymentAuthorizationViewControllerDidFinish(controller: PKPaymentAuthorizationViewController) {
