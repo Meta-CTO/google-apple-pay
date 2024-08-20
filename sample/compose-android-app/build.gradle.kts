@@ -24,7 +24,7 @@ android {
     namespace = "com.khalid.googlepay.compose.app"
     defaultConfig {
         applicationId = "com.khalid.googlepay.compose.app"
-        minSdk = 24
+        minSdk = 26
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

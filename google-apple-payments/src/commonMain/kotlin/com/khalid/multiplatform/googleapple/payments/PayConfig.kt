@@ -16,6 +16,7 @@
 
 package com.khalid.multiplatform.googleapple.payments
 
+import kotlinx.datetime.LocalDate
 
 
 data class PaymentConfig(
@@ -81,9 +82,44 @@ data class PaymentConfig(
      * */
     val paymentsEnvironment: Int = 3, // WalletConstants.ENVIRONMENT_TEST
 
+    /**
+     * to set if recurring payment is enabled
+     */
+    val isRecurringPayment: Boolean = false,
 
-
+    /**
+     * required by Apple Pay if isRecurringPayment is true
+     * */
+    val recurringPaymentData: RecurringPaymentData? = null
 )
+
+/**
+ * Recurring payment data
+ * startDate: The date the recurring payment starts. If not specified, the payment starts immediately.
+ * endDate: The date the recurring payment ends. If not specified, the payment continues indefinitely.
+ * interval: The interval between payments. For example, if the interval is 2 and the frequency unit is MONTH, the payment occurs every two months.
+ * frequencyUnit: The unit of time between payments.
+ */
+data class RecurringPaymentData(
+    val startDate: LocalDate? = null,
+    val endDate: LocalDate? = null,
+    val interval: Int,
+    val frequencyUnit: FrequencyUnit,
+    val paymentDescription: String,
+    val managementURL: String
+)
+
+enum class FrequencyUnit {
+    ERA,
+    YEAR,
+    MONTH,
+    DAY,
+    HOUR,
+    MINUTE,
+    SECOND,
+    WEEK,
+    QUARTER
+}
 
 enum class AllowedCards {
     VISA,

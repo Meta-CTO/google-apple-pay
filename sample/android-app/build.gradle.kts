@@ -28,7 +28,7 @@ android {
 
     compileSdk = 34
     defaultConfig {
-        minSdk = 24
+        minSdk = 26
         applicationId = "com.khalid.googlepay.app"
         versionCode = 1
         versionName = "0.1.0"

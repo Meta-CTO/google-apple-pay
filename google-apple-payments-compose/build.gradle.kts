@@ -21,12 +21,16 @@ plugins {
     id("org.jetbrains.compose")
 }
 
+kotlin {
+    task("testClasses")
+}
+
 android {
     namespace = "com.khalid.multiplatform.googleapple.payments.compose"
 
     compileSdk = 34
     defaultConfig {
-        minSdk = 21
+        minSdk = 26
     }
 }
 
@@ -40,7 +44,7 @@ dependencies {
 
 
 group = "com.metacto.payments"
-version = "0.1.1"
+version = "0.1.2"
 
 publishing {
     repositories {

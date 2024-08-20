@@ -20,12 +20,16 @@ plugins {
     id("io.github.khalid64927.gradle.stub.javadoc")
 }
 
+kotlin {
+    task("testClasses")
+}
+
 android {
     namespace = "com.khalid.multiplatform.googleapple.payments"
 
     compileSdk = 34
     defaultConfig {
-        minSdk = 21
+        minSdk = 26
     }
 
     compileOptions {
@@ -37,6 +41,7 @@ android {
 
 dependencies {
     commonMainImplementation(libs.coroutines)
+    commonMainImplementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
     androidMainImplementation(libs.appCompat)
     androidMainImplementation(libs.lifecycle)
     androidMainImplementation(libs.lifecycleRuntime)
@@ -48,7 +53,7 @@ dependencies {
 }
 
 group = "com.metacto.payments"
-version = "0.1.1"
+version = "0.1.2"
 
 publishing {
     repositories {

@@ -19,6 +19,17 @@
 package com.khalid.multiplatform.googleapple.payments
 
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.datetime.toNSDateComponents
+import platform.Foundation.NSCalendarUnit
+import platform.Foundation.NSCalendarUnitDay
+import platform.Foundation.NSCalendarUnitEra
+import platform.Foundation.NSCalendarUnitHour
+import platform.Foundation.NSCalendarUnitMinute
+import platform.Foundation.NSCalendarUnitMonth
+import platform.Foundation.NSCalendarUnitQuarter
+import platform.Foundation.NSCalendarUnitSecond
+import platform.Foundation.NSCalendarUnitYear
+import platform.Foundation.NSCalendarUnitYearForWeekOfYear
 import platform.Foundation.NSDecimalNumber
 import platform.Foundation.NSJSONReadingOptions
 import platform.Foundation.NSLog
@@ -36,6 +47,9 @@ import platform.PassKit.PKPaymentSummaryItem
 import platform.UIKit.UIApplication
 import platform.darwin.NSObject
 import platform.Foundation.NSJSONSerialization
+import platform.Foundation.NSURL
+import platform.PassKit.PKRecurringPaymentRequest
+import platform.PassKit.PKRecurringPaymentSummaryItem
 
 @Suppress("ForbiddenComment")
 class ApplePayModelImpl(val config: PaymentConfig) : PaymentInterface {
@@ -66,6 +80,20 @@ class ApplePayModelImpl(val config: PaymentConfig) : PaymentInterface {
 
         paymentRequest.paymentSummaryItems = listOf(paymentItem)
 
+        if(config.isRecurringPayment && config.recurringPaymentData != null) {
+            val recurringPayment = PKRecurringPaymentSummaryItem()
+            recurringPayment.intervalUnit = config.recurringPaymentData.frequencyUnit.toNSCalendarUnit()
+            recurringPayment.intervalCount = config.recurringPaymentData.interval.toLong()
+            recurringPayment.startDate = config.recurringPaymentData.startDate?.toNSDateComponents()?.date
+            recurringPayment.endDate = config.recurringPaymentData.endDate?.toNSDateComponents()?.date
+
+            val recurring = PKRecurringPaymentRequest()
+
+            recurring.paymentDescription = config.recurringPaymentData.paymentDescription
+            recurring.regularBilling = recurringPayment
+            recurring.managementURL = NSURL(string = config.recurringPaymentData.managementURL)
+            paymentRequest.recurringPaymentRequest = recurring
+        }
 
         /**
          * TODO:
@@ -121,5 +149,19 @@ private class PaymentAuthorizationDelegate(private val callback: (result: Result
     override fun paymentAuthorizationViewControllerDidFinish(controller: PKPaymentAuthorizationViewController) {
         NSLog("Payment finished")
         controller.dismissViewControllerAnimated(true, completion = null)
+    }
+}
+
+private fun FrequencyUnit.toNSCalendarUnit(): NSCalendarUnit {
+    return when (this) {
+        FrequencyUnit.ERA -> NSCalendarUnitEra
+        FrequencyUnit.YEAR -> NSCalendarUnitYear
+        FrequencyUnit.MONTH -> NSCalendarUnitMonth
+        FrequencyUnit.WEEK -> NSCalendarUnitYearForWeekOfYear
+        FrequencyUnit.DAY -> NSCalendarUnitDay
+        FrequencyUnit.HOUR -> NSCalendarUnitHour
+        FrequencyUnit.MINUTE -> NSCalendarUnitMinute
+        FrequencyUnit.SECOND -> NSCalendarUnitSecond
+        FrequencyUnit.QUARTER -> NSCalendarUnitQuarter
     }
 }

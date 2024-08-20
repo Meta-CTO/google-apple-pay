@@ -19,6 +19,10 @@ plugins {
     id("dev.icerock.mobile.multiplatform.ios-framework")
 }
 
+kotlin {
+    task("testClasses")
+}
+
 dependencies {
     commonMainApi(libs.mokoMvvmCore)
     commonMainApi(projects.googleApplePayments)
