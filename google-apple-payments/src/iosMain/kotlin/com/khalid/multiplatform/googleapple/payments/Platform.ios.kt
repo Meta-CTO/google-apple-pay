@@ -19,6 +19,7 @@ package com.khalid.multiplatform.googleapple.payments
 
 actual interface PaymentInterface {
     actual suspend fun canMakePayments(): Boolean
+    @Throws(Throwable::class)
     actual suspend fun makePayments(
         amount: String,
         callback: (result: Result<PaymentResult>) -> Unit

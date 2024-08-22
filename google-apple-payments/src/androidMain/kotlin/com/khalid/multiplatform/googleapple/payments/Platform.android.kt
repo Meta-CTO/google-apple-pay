@@ -25,6 +25,7 @@ import androidx.lifecycle.Lifecycle
 @Suppress()
 actual interface PaymentInterface {
     actual suspend fun canMakePayments(): Boolean
+    @Throws(Throwable::class)
     actual suspend fun makePayments(
         amount: String,
         callback: (result: Result<PaymentResult>) -> Unit

@@ -48,6 +48,7 @@ import platform.UIKit.UIApplication
 import platform.darwin.NSObject
 import platform.Foundation.NSJSONSerialization
 import platform.Foundation.NSURL
+import platform.PassKit.PKPaymentSummaryItemType
 import platform.PassKit.PKRecurringPaymentRequest
 import platform.PassKit.PKRecurringPaymentSummaryItem
 
@@ -58,6 +59,7 @@ class ApplePayModelImpl(val config: PaymentConfig) : PaymentInterface {
         return PKPaymentAuthorizationViewController.canMakePayments()
     }
 
+    @Throws(Throwable::class)
     override suspend fun makePayments(
         amount: String,
         callback: (result: Result<PaymentResult>) -> Unit
@@ -82,6 +84,10 @@ class ApplePayModelImpl(val config: PaymentConfig) : PaymentInterface {
 
         if(config.isRecurringPayment && config.recurringPaymentData != null) {
             val recurringPayment = PKRecurringPaymentSummaryItem()
+            recurringPayment.setLabel(config.recurringPaymentData.recurringLabel)
+            recurringPayment.setAmount(NSDecimalNumber(amount))
+            recurringPayment.setType(config.recurringPaymentData.amountType.toPKPaymentSummaryItemType())
+
             recurringPayment.intervalUnit = config.recurringPaymentData.frequencyUnit.toNSCalendarUnit()
             recurringPayment.intervalCount = config.recurringPaymentData.interval.toLong()
             recurringPayment.startDate = config.recurringPaymentData.startDate?.toNSDateComponents()?.date
@@ -163,5 +169,12 @@ private fun FrequencyUnit.toNSCalendarUnit(): NSCalendarUnit {
         FrequencyUnit.MINUTE -> NSCalendarUnitMinute
         FrequencyUnit.SECOND -> NSCalendarUnitSecond
         FrequencyUnit.QUARTER -> NSCalendarUnitQuarter
+    }
+}
+
+private fun AmountType.toPKPaymentSummaryItemType(): PKPaymentSummaryItemType {
+    return when (this) {
+        AmountType.FINAL -> PKPaymentSummaryItemType.PKPaymentSummaryItemTypeFinal
+        AmountType.PENDING -> PKPaymentSummaryItemType.PKPaymentSummaryItemTypePending
     }
 }

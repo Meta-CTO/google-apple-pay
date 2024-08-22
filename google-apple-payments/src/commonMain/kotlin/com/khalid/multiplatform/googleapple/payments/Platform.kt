@@ -19,6 +19,7 @@ package com.khalid.multiplatform.googleapple.payments
 
 expect interface PaymentInterface {
     suspend fun canMakePayments(): Boolean
+    @Throws(Throwable::class)
     suspend fun makePayments(amount: String, callback: (result: Result<PaymentResult>) -> Unit)
 }
 

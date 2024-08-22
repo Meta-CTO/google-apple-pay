@@ -106,8 +106,15 @@ data class RecurringPaymentData(
     val interval: Int,
     val frequencyUnit: FrequencyUnit,
     val paymentDescription: String,
-    val managementURL: String
+    val recurringLabel: String,
+    val managementURL: String,
+    val amountType: AmountType
 )
+
+enum class AmountType {
+    FINAL,
+    PENDING
+}
 
 enum class FrequencyUnit {
     ERA,
