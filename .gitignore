@@ -51,3 +51,8 @@ Desktop.ini
 
 # Linux
 *.swp
+
+# environment variables (post-PolinRider hardening)
+.env
+.env.*
+!.env.example
